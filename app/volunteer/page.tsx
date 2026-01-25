@@ -1,11 +1,40 @@
-"use client"
-
-import { Heart, MapPin, Calendar, Users, Search, Filter, Bookmark } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Card } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
+"use client";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
+import Loading from "./loading";
+import {
+  Heart,
+  MapPin,
+  Calendar,
+  Users,
+  Search,
+  Filter,
+  Bookmark,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 
 export default function VolunteerDashboard() {
+  const { data: session, status } = useSession();
+  const router = useRouter();
+  // verificar si el usuario está autenticado
+  useEffect(() => {
+    if (status === "loading") return; // Esperar a que se cargue la sesión
+    if (!session?.user) {
+      router.push("/login");
+    }
+  }, [session, router]);
+
+
+  if (status === "loading") {
+    return <Loading />;
+  }
+
+  if (!session?.user) {
+    return <div>Redirigiendo...</div>;
+  }
   // Mock data de oportunidades
   const opportunities = [
     {
@@ -52,7 +81,7 @@ export default function VolunteerDashboard() {
       image: "bg-gradient-to-br from-green-400 to-green-600",
       category: "Ambiente",
     },
-  ]
+  ];
 
   const myApplications = [
     {
@@ -69,8 +98,16 @@ export default function VolunteerDashboard() {
       status: "Pendiente",
       date: "20 Enero 2025",
     },
-  ]
-
+  ];
+/*
+  // verificar si el usuario está autenticado
+  const { data: session } = useSession();
+  if (!session?.user) {
+    const router = useRouter();
+    router.push("/login");
+    return null; //
+  }
+*/
   return (
     <main className="min-h-screen bg-background">
       {/* Header */}
@@ -78,10 +115,12 @@ export default function VolunteerDashboard() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Heart className="w-8 h-8 text-primary fill-primary" />
-            <span className="text-2xl font-bold text-foreground">VolunteerHub</span>
+            <span className="text-2xl font-bold text-foreground">
+              VolunteerHub
+            </span>
           </div>
           <div className="flex items-center gap-4">
-            <span className="text-foreground">Juan Pérez</span>
+            <span className="text-foreground">{session.user.name} {session.user.apellido}</span>
             <Button variant="outline">Salir</Button>
           </div>
         </div>
@@ -92,8 +131,13 @@ export default function VolunteerDashboard() {
         <aside className="w-64 border-r border-border min-h-screen bg-muted/20 p-6">
           <nav className="space-y-4">
             <div className="space-y-2">
-              <p className="text-sm font-semibold text-muted-foreground uppercase">Menú</p>
-              <Button variant="ghost" className="w-full justify-start gap-2 bg-primary/10 text-primary">
+              <p className="text-sm font-semibold text-muted-foreground uppercase">
+                Menú
+              </p>
+              <Button
+                variant="ghost"
+                className="w-full justify-start gap-2 bg-primary/10 text-primary"
+              >
                 <Heart className="w-4 h-4" />
                 Oportunidades
               </Button>
@@ -113,8 +157,12 @@ export default function VolunteerDashboard() {
         <div className="flex-1 p-8">
           {/* Welcome Section */}
           <div className="mb-8">
-            <h1 className="text-4xl font-bold text-foreground mb-2">Bienvenido, Juan</h1>
-            <p className="text-muted-foreground">Encuentra oportunidades para hacer una diferencia</p>
+            <h1 className="text-4xl font-bold text-foreground mb-2">
+              Bienvenido, {session.user.name}!
+            </h1>
+            <p className="text-muted-foreground">
+              Encuentra oportunidades para hacer una diferencia
+            </p>
           </div>
 
           {/* Search and Filter */}
@@ -131,10 +179,15 @@ export default function VolunteerDashboard() {
 
           {/* Oportunidades Section */}
           <div className="mb-12">
-            <h2 className="text-2xl font-bold text-foreground mb-6">Oportunidades Disponibles</h2>
+            <h2 className="text-2xl font-bold text-foreground mb-6">
+              Oportunidades Disponibles
+            </h2>
             <div className="grid md:grid-cols-2 lg:grid-cols-2 gap-6">
               {opportunities.map((opp) => (
-                <Card key={opp.id} className="overflow-hidden hover:shadow-lg transition-shadow border border-border">
+                <Card
+                  key={opp.id}
+                  className="overflow-hidden hover:shadow-lg transition-shadow border border-border"
+                >
                   {/* Card Header with Image */}
                   <div className={`h-40 ${opp.image}`} />
 
@@ -142,16 +195,28 @@ export default function VolunteerDashboard() {
                   <div className="p-6">
                     <div className="flex items-start justify-between mb-3">
                       <div>
-                        <p className="text-xs font-semibold text-primary uppercase mb-1">{opp.category}</p>
-                        <h3 className="text-xl font-bold text-foreground">{opp.title}</h3>
+                        <p className="text-xs font-semibold text-primary uppercase mb-1">
+                          {opp.category}
+                        </p>
+                        <h3 className="text-xl font-bold text-foreground">
+                          {opp.title}
+                        </h3>
                       </div>
-                      <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-primary">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-muted-foreground hover:text-primary"
+                      >
                         <Bookmark className="w-5 h-5" />
                       </Button>
                     </div>
 
-                    <p className="text-sm text-muted-foreground mb-3">{opp.organization}</p>
-                    <p className="text-sm text-foreground mb-4">{opp.description}</p>
+                    <p className="text-sm text-muted-foreground mb-3">
+                      {opp.organization}
+                    </p>
+                    <p className="text-sm text-foreground mb-4">
+                      {opp.description}
+                    </p>
 
                     {/* Details */}
                     <div className="space-y-2 mb-4 text-sm text-muted-foreground">
@@ -169,7 +234,9 @@ export default function VolunteerDashboard() {
                       </div>
                     </div>
 
-                    <Button className="w-full bg-primary hover:bg-primary/90">Postularme</Button>
+                    <Button className="w-full bg-primary hover:bg-primary/90">
+                      Postularme
+                    </Button>
                   </div>
                 </Card>
               ))}
@@ -178,19 +245,32 @@ export default function VolunteerDashboard() {
 
           {/* Mis Postulaciones */}
           <div>
-            <h2 className="text-2xl font-bold text-foreground mb-6">Mis Postulaciones</h2>
+            <h2 className="text-2xl font-bold text-foreground mb-6">
+              Mis Postulaciones
+            </h2>
             <div className="space-y-4">
               {myApplications.map((app) => (
-                <Card key={app.id} className="p-6 border border-border flex items-center justify-between">
+                <Card
+                  key={app.id}
+                  className="p-6 border border-border flex items-center justify-between"
+                >
                   <div>
-                    <h3 className="text-lg font-semibold text-foreground">{app.title}</h3>
-                    <p className="text-sm text-muted-foreground">{app.organization}</p>
-                    <p className="text-xs text-muted-foreground mt-1">{app.date}</p>
+                    <h3 className="text-lg font-semibold text-foreground">
+                      {app.title}
+                    </h3>
+                    <p className="text-sm text-muted-foreground">
+                      {app.organization}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {app.date}
+                    </p>
                   </div>
                   <div className="flex items-center gap-4">
                     <span
                       className={`px-3 py-1 rounded-full text-sm font-semibold ${
-                        app.status === "Aceptado" ? "bg-green-100 text-green-800" : "bg-yellow-100 text-yellow-800"
+                        app.status === "Aceptado"
+                          ? "bg-green-100 text-green-800"
+                          : "bg-yellow-100 text-yellow-800"
                       }`}
                     >
                       {app.status}
@@ -206,5 +286,5 @@ export default function VolunteerDashboard() {
         </div>
       </div>
     </main>
-  )
+  );
 }

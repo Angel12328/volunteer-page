@@ -28,7 +28,9 @@ export const authConfig = {
     // Control de acceso basado en la autenticación y ruta
     authorized({ auth, request: { nextUrl } }) {
       const isLoggedIn = !!auth?.user; // Verifica si el usuario está autenticado
-      console.log(isLoggedIn ? "Usuario autenticado" : "Usuario no autenticado");
+      console.log(
+        isLoggedIn ? "Usuario autenticado" : "Usuario no autenticado",
+      );
       const isOnVolunteer = nextUrl.pathname.startsWith("/volunteer");
       const isOnOrganization = nextUrl.pathname.startsWith("/organization");
       /*
@@ -37,24 +39,25 @@ export const authConfig = {
         return Response.redirect(new URL("/login", nextUrl)); // redigire a login si no está autenticado
       }
       */
-      
+
       // Restricción de acceso para rutas de voluntario
-      if(isOnVolunteer){
-        console.log( auth?.user);
-        if(isLoggedIn && auth?.user.userType === "VOL") return true; 
+      if (isOnVolunteer) {
+        console.log(auth?.user);
+        if (isLoggedIn && auth?.user.userType === "VOL") return true;
         console.log("Redirecting to login");
         return Response.redirect(new URL("/login", nextUrl)); // redigire a login si no está autenticado
       }
       // Restricción de acceso para rutas de organización
-      if(isOnOrganization){
-        if(isLoggedIn && auth?.user.userType === "ORG") return true;
+      if (isOnOrganization) {
+        if (isLoggedIn && auth?.user.userType === "ORG") return true;
         return Response.redirect(new URL("/login", nextUrl)); // redigire a login si no está autenticado
       }
       return true; // Permitir acceso a otras rutas
     },
-    
+
     // Añadir información adicional al token JWT
-    jwt({ token, user, trigger, session }) { //
+    jwt({ token, user, trigger, session }) {
+      //
       if (user) {
         token.idUsuario = user.idUsuario;
         token.id = user.id;
@@ -74,6 +77,7 @@ export const authConfig = {
     },
     // Añadir información adicional a la sesión
     session({ session, token }) {
+      console.log("Token in session callback:", token);
       if (session.user) {
         session.user.idUsuario = token.idUsuario as string;
         session.user.id = token.id as string;
@@ -82,8 +86,8 @@ export const authConfig = {
         session.user.apellido = token.apellido as string;
         session.user.userType = token.userType as string;
         session.user.foto_perfil = token.foto_perfil as string;
-
       }
+      console.log("Session after processing:", session.user);
       return session;
     },
   },
@@ -103,7 +107,6 @@ export const authConfig = {
             throw new Error("Email y contraseña requeridos");
           }
 
-
           const response = await fetch(
             `${process.env.NEXT_PUBLIC_API_URL}/api/usuarios/login`,
             {
@@ -115,7 +118,7 @@ export const authConfig = {
                 email: credentials.email,
                 password: credentials.password,
               }),
-            }
+            },
           );
 
           if (!response.ok) {
@@ -123,19 +126,21 @@ export const authConfig = {
             throw new Error(error.message || "Email o contraseña incorrectos");
           }
 
-          const user = await response.json(); // Asegúrate de que la API devuelva el usuario en el formato correcto
-          console.log("Auth user:", user);
+          const {user} = await response.json(); // Asegúrate de que la API devuelva el usuario en el formato correcto
+          console.log("API response user:", user);
 
-          // Retorna el usuario para almacenarlo en la sesión
-          return {
-            idUsuario: user.id_user,
-            id: user.id_org || user.id_vol,
-            email: user.email,
-            name: user.pnombre || user.nombre,
-            apellido: user.spellido || null,
-            userType: user.rol,
-            foto_perfil: user.foto_perfil || user.logo || null,
+          const userData = {
+            idUsuario: user.id_user || null,
+            id: user.id_org || user.id_vol || null,
+            email: user.email || credentials.email, // Si la API no devuelve email, usa el de credentials
+            name: user.pnombre || user.nombre || null,
+            apellido: user.sapellido || null, 
+            userType: user.rol || null,
+            foto_perfil: user.foto_perfil ||user.logo || null,
           };
+          console.log("Authorized user data:", userData);
+          // Retorna el usuario para almacenarlo en la sesión
+          return userData;
         } catch (error) {
           console.error("Auth error:", error);
           return null; // Retorna null si la autenticación falla
