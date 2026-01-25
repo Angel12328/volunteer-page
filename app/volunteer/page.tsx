@@ -11,10 +11,12 @@ import {
   Search,
   Filter,
   Bookmark,
+  Link,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { signOut } from "next-auth/react";
 
 export default function VolunteerDashboard() {
   const { data: session, status } = useSession();
@@ -26,7 +28,6 @@ export default function VolunteerDashboard() {
       router.push("/login");
     }
   }, [session, router]);
-
 
   if (status === "loading") {
     return <Loading />;
@@ -99,7 +100,7 @@ export default function VolunteerDashboard() {
       date: "20 Enero 2025",
     },
   ];
-/*
+  /*
   // verificar si el usuario está autenticado
   const { data: session } = useSession();
   if (!session?.user) {
@@ -115,13 +116,22 @@ export default function VolunteerDashboard() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Heart className="w-8 h-8 text-primary fill-primary" />
-            <span className="text-2xl font-bold text-foreground">
-              VolunteerHub
-            </span>
+            <a href="/">
+              <span className="text-2xl font-bold text-foreground">
+                VolunteerHub
+              </span>
+            </a>
           </div>
           <div className="flex items-center gap-4">
-            <span className="text-foreground">{session.user.name} {session.user.apellido}</span>
-            <Button variant="outline">Salir</Button>
+            <span className="text-foreground">
+              {session.user.name} {session.user.apellido}
+            </span>
+            <Button
+              variant="outline"
+              onClick={() => signOut({ callbackUrl: "/login" })}
+            >
+              Salir
+            </Button>
           </div>
         </div>
       </header>

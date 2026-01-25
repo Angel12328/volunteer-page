@@ -6,14 +6,13 @@ import { DefaultSession } from "next-auth";
 
 declare module "next-auth" {
   interface User {
-    idUsuario: string;
-    id: string;
-    email: string;
-    name: string;
+    //id,email,name ya los trae por defecto next-auth
+    idUsuario: number;
     apellido: string;
     userType: string;
     foto_perfil: string;
   }
+  
 
   interface Session {
     user: User & DefaultSession["user"];
@@ -42,7 +41,7 @@ export const authConfig = {
 
       // Restricción de acceso para rutas de voluntario
       if (isOnVolunteer) {
-        console.log(auth?.user);
+        //console.log(auth?.user);
         if (isLoggedIn && auth?.user.userType === "VOL") return true;
         console.log("Redirecting to login");
         return Response.redirect(new URL("/login", nextUrl)); // redigire a login si no está autenticado
@@ -50,6 +49,7 @@ export const authConfig = {
       // Restricción de acceso para rutas de organización
       if (isOnOrganization) {
         if (isLoggedIn && auth?.user.userType === "ORG") return true;
+        console.log("Redirecting to login");
         return Response.redirect(new URL("/login", nextUrl)); // redigire a login si no está autenticado
       }
       return true; // Permitir acceso a otras rutas
@@ -79,7 +79,7 @@ export const authConfig = {
     session({ session, token }) {
       console.log("Token in session callback:", token);
       if (session.user) {
-        session.user.idUsuario = token.idUsuario as string;
+        session.user.idUsuario = token.idUsuario as number;
         session.user.id = token.id as string;
         session.user.email = token.email as string;
         session.user.name = token.name as string;
